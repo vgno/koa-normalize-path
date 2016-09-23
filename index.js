@@ -1,6 +1,6 @@
 'use strict';
 
-var normalize = require('path').normalize;
+var normalize = require('path').posix.normalize;
 
 module.exports = normalizePath;
 
