@@ -1,114 +1,99 @@
 'use strict';
 
-var expect = require('expect');
-var normalizePath = require('../index.js');
+const expect = require('expect');
+const normalizePath = require('../');
 
-describe('koa-normalize-path', function() {
-    describe('defer = false', function() {
-        it('should redirect on url and path has to many slashes', function() {
-            var mock = createMock('////foo////');
-            var normalizePathMock = normalizePath({defer: false}).bind(mock.this);
-            var normalizePathMockGenerator = normalizePathMock();
-            normalizePathMockGenerator.next();
+describe('koa-normalize-path', () => {
+    describe('defer = false', () => {
+        it('should redirect on url and path has to many slashes', async () => {
+            const mock = createMock('////foo////');
+            await normalizePath({defer: false})(mock.ctx, mock.next);
+
             expect(mock.redirectMock.calls[0].arguments[0]).toEqual('/foo/');
-            expect(mock.this.status).toBe(301);
+            expect(mock.ctx.status).toBe(301);
         });
     });
 
-    describe('chained = false', function() {
-        it('should not redirect on url that already have been modified', function() {
-            var mock = createMock('/fOo////');
+    describe('chained = false', () => {
+        it('should not redirect on url that already have been modified', async () => {
+            const mock = createMock('/fOo////');
 
             // Mock that something has made a redirect before us
-            mock.this.status = 301;
-            mock.this.body = 'Redirecting to …';
-            mock.this.response = {
-                get: function() {
+            mock.ctx.status = 301;
+            mock.ctx.body = 'Redirecting to …';
+            mock.ctx.response = {
+                get() {
                     return '/foo////';
                 }
             };
 
-            var normalizePathMock = normalizePath({chained: false}).bind(mock.this);
-            var normalizePathMockGenerator = normalizePathMock();
-            normalizePathMockGenerator.next();
-            normalizePathMockGenerator.next();
+            await normalizePath({chained: false})(mock.ctx, mock.next);
+
             expect(mock.redirectMock).toNotHaveBeenCalled();
-            expect(mock.this.status).toBe(301);
+            expect(mock.ctx.status).toBe(301);
         });
     });
 
-    describe('chained = true & defer = true', function() {
-        describe('redirect', function() {
-            it('should redirect on url that already have been modified and path has to many slashes', function() {
-                var mock = createMock('/fOo///');
+    describe('chained = true & defer = true', () => {
+        describe('redirect', () => {
+            it('should redirect on url that already have been modified and path has to many slashes', async () => {
+                const mock = createMock('/fOo///');
 
                 // Mock that something has made a redirect before us
-                mock.this.status = 301;
-                mock.this.body = 'Redirecting to …';
-                mock.this.response = {
-                    get: function() {
+                mock.ctx.status = 301;
+                mock.ctx.body = 'Redirecting to …';
+                mock.ctx.response = {
+                    get() {
                         return '/foo///';
                     }
                 };
 
-                var normalizePathMock = normalizePath().bind(mock.this);
-                var normalizePathMockGenerator = normalizePathMock();
-                normalizePathMockGenerator.next();
-                normalizePathMockGenerator.next();
+                await normalizePath()(mock.ctx, mock.next);
+
                 expect(mock.redirectMock.calls[0].arguments[0]).toEqual('/foo/');
-                expect(mock.this.status).toBe(301);
+                expect(mock.ctx.status).toBe(301);
             });
 
-            it('should redirect on url and path have to many slashes', function() {
-                var mock = createMock('//foo/');
-                var normalizePathMock = normalizePath().bind(mock.this);
-                var normalizePathMockGenerator = normalizePathMock();
-                normalizePathMockGenerator.next();
-                normalizePathMockGenerator.next();
+            it('should redirect on url and path have to many slashes', async () => {
+                const mock = createMock('//foo/');
+                await normalizePath()(mock.ctx, mock.next);
+
                 expect(mock.redirectMock.calls[0].arguments[0]).toEqual('/foo/');
-                expect(mock.this.status).toBe(301);
+                expect(mock.ctx.status).toBe(301);
             });
 
-            it('should redirect on url and path has to many slashes with query', function() {
-                var mock = createMock('///foo?hello=wOrld', 'hello=wOrld');
-                var normalizePathMock = normalizePath().bind(mock.this);
-                var normalizePathMockGenerator = normalizePathMock();
-                normalizePathMockGenerator.next();
-                normalizePathMockGenerator.next();
+            it('should redirect on url and path has to many slashes with query', async () => {
+                const mock = createMock('///foo?hello=wOrld', 'hello=wOrld');
+                await normalizePath()(mock.ctx, mock.next);
+
                 expect(mock.redirectMock.calls[0].arguments[0]).toEqual('/foo?hello=wOrld');
-                expect(mock.this.status).toBe(301);
+                expect(mock.ctx.status).toBe(301);
             });
 
-            it('should redirect on UTF-8 url and path has to many slashes', function() {
-                var mock = createMock('/fØö//////БАЯ');
-                var normalizePathMock = normalizePath().bind(mock.this);
-                var normalizePathMockGenerator = normalizePathMock();
-                normalizePathMockGenerator.next();
-                normalizePathMockGenerator.next();
+            it('should redirect on UTF-8 url and path has to many slashes', async () => {
+                const mock = createMock('/fØö//////БАЯ');
+                await normalizePath()(mock.ctx, mock.next);
+
                 expect(mock.redirectMock.calls[0].arguments[0]).toEqual('/fØö/БАЯ');
-                expect(mock.this.status).toBe(301);
+                expect(mock.ctx.status).toBe(301);
             });
         });
 
-        describe('not redirect', function() {
-            it('should not redirect on urland path have correct amount of slashes', function() {
-                var mock = createMock('/foo');
-                var normalizePathMock = normalizePath().bind(mock.this);
-                var normalizePathMockGenerator = normalizePathMock();
-                normalizePathMockGenerator.next();
-                normalizePathMockGenerator.next();
+        describe('not redirect', () => {
+            it('should not redirect on urland path have correct amount of slashes', async () => {
+                const mock = createMock('/foo');
+                await normalizePath()(mock.ctx, mock.next);
+
                 expect(mock.redirectMock).toNotHaveBeenCalled();
-                expect(mock.this.status).toBe(undefined);
+                expect(mock.ctx.status).toBe(undefined);
             });
 
-            it('should not redirect on url and path have correct amount of slashes', function() {
-                var mock = createMock('/foo/?hello=wOrld', 'hello=wOrld');
-                var normalizePathMock = normalizePath().bind(mock.this);
-                var normalizePathMockGenerator = normalizePathMock();
-                normalizePathMockGenerator.next();
-                normalizePathMockGenerator.next();
+            it('should not redirect on url and path have correct amount of slashes', async () => {
+                const mock = createMock('/foo/?hello=wOrld', 'hello=wOrld');
+                await normalizePath()(mock.ctx, mock.next);
+
                 expect(mock.redirectMock).toNotHaveBeenCalled();
-                expect(mock.this.status).toBe(undefined);
+                expect(mock.ctx.status).toBe(undefined);
             });
         });
     });
@@ -116,14 +101,15 @@ describe('koa-normalize-path', function() {
 
 function createMock(originalUrl, querystring) {
     querystring = querystring || '';
-    var redirectMock = expect.createSpy();
+    const redirectMock = expect.createSpy();
     return {
         redirectMock: redirectMock,
-        this: {
+        ctx: {
             originalUrl: originalUrl,
             querystring: querystring,
             status: undefined,
             redirect: redirectMock
-        }
+        },
+        next: async () => {}
     };
 }
