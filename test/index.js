@@ -1,9 +1,23 @@
 'use strict';
 
 const expect = require('expect');
+const Koa = require('koa');
+const request = require('supertest');
 const normalizePath = require('../');
 
 describe('koa-normalize-path', () => {
+    describe('running in Koa', () => {
+        it('should work in a normal scenarion', (done) => {
+            const app = new Koa();
+            app.use(normalizePath());
+
+            request(app.listen())
+                .get('/foo///')
+                .expect('Location', '/foo/')
+                .expect(301, done);
+        });
+    });
+
     describe('defer = false', () => {
         it('should redirect on url and path has to many slashes', async () => {
             const mock = createMock('////foo////');
