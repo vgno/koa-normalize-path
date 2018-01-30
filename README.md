@@ -2,6 +2,8 @@
 
 Koa middleware that normalizes paths.
 
+**Notice: koa-normalize-path@2 supports koa@2; if you want to use this module with koa@1, please use koa-normalize-path@1.**
+
 [![Build Status](https://img.shields.io/travis/vgno/koa-normalize-path/master.svg?style=flat-square)](http://travis-ci.org/vgno/koa-normalize-path) [![Coverage Status](https://img.shields.io/coveralls/vgno/koa-normalize-path/master.svg?style=flat-square)](https://coveralls.io/r/vgno/koa-normalize-path) [![npm](https://img.shields.io/npm/v/koa-normalize-path.svg?style=flat-square)](https://www.npmjs.com/package/koa-normalize-path)
 
 ## Installation
@@ -11,8 +13,8 @@ npm install koa-normalize-path
 
 ## API
 ```js
-var koa = require('koa');
-var app = koa();
+const Koa = require('koa');
+const app = new Koa();
 app.use(require('koa-normalize-path')(opts));
 ```
 
@@ -25,15 +27,15 @@ app.use(require('koa-normalize-path')(opts));
 
 ## Example
 ```js
-var koa = require('koa');
-var normalizePath = require('koa-normalize-path');
+const Koa = require('koa');
+const normalizePath = require('koa-normalize-path');
 
-var app = koa();
+const app = new Koa();
 
 app.use(normalizePath());
 
-app.use(function *(){
-  this.body = 'Hello World';
+app.use(ctx => {
+  ctx.body = 'Hello World';
 });
 
 app.listen(3000);
