@@ -1,6 +1,6 @@
 'use strict';
 
-var normalize = require('path').posix.normalize;
+const normalize = require('path').posix.normalize;
 
 module.exports = normalizePath;
 
@@ -15,32 +15,32 @@ function normalizePath(opts) {
         opts.chained = opts.chained || true;
     }
 
-    return function* (next) {
+    return async function(ctx, next) {
         if (opts.defer) {
-            yield next;
+            await next();
         }
 
-        var path;
+        let path;
 
         // We have already done a redirect and we will continue if we are in chained mode
-        if (opts.chained && this.status === 301) {
-            path = getPath(this.response.get('Location'), this.querystring);
-        } else if (this.status !== 301) {
-            path = getPath(this.originalUrl, this.querystring);
+        if (opts.chained && ctx.status === 301) {
+            path = getPath(ctx.response.get('Location'), ctx.querystring);
+        } else if (ctx.status !== 301) {
+            path = getPath(ctx.originalUrl, ctx.querystring);
         }
 
         if (path) {
-            var normalizedPath = normalize(path);
+            const normalizedPath = normalize(path);
             if (path !== normalizedPath) {
-                var query = this.querystring.length ? '?' + this.querystring : '';
+                const query = ctx.querystring.length ? '?' + ctx.querystring : '';
 
-                this.status = 301;
-                this.redirect(normalizedPath + query);
+                ctx.status = 301;
+                ctx.redirect(normalizedPath + query);
             }
         }
 
         if (!opts.defer) {
-            yield next;
+            await next();
         }
     };
 }
